@@ -28,6 +28,7 @@ adaptive video and audio streams into an MKV download. Localhost
 and private IP ranges are still rejected before yt-dlp runs. Downloads use
 `POST /v1/download` with `{ "url": "...", "formatId": "..." }`; set `YTDLP_PATH`
 when `yt-dlp` is not on `PATH`; set `FFMPEG_PATH` to the ffmpeg directory when it is
-not on `PATH`. Cookies, credentials, private/authenticated videos,
+not on `PATH`. `YTDLP_TIMEOUT_MS` controls the yt-dlp operation timeout and defaults
+to 90 seconds. Cookies, credentials, private/authenticated videos,
 direct media URLs, and DRM bypass are not supported. Errors consistently use
 `{ "error": { "code": "...", "message": "..." } }`.

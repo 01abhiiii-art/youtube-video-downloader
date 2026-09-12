@@ -21,6 +21,8 @@ The API listens on `http://127.0.0.1:8787` by default. To connect the frontend, 
 state and never fakes a successful download.
 Downloads require external `yt-dlp` and `ffmpeg` executables on the API host (or set
 `YTDLP_PATH` and `FFMPEG_PATH`).
+The default yt-dlp operation timeout is 90 seconds and can be changed with
+`YTDLP_TIMEOUT_MS`.
 Both API endpoints accept only public YouTube watch, Shorts, embed, and youtu.be video
 URLs. Other domains, direct media URLs, playlists, channels, and unsupported YouTube
 URL shapes are rejected. `POST /v1/download` accepts

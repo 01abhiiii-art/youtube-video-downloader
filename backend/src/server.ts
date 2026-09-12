@@ -14,7 +14,7 @@ const HOST = process.env.HOST ?? "127.0.0.1";
 const REQUEST_TIMEOUT_MS = 8_000;
 const YTDLP_PATH = process.env.YTDLP_PATH ?? "yt-dlp";
 const FFMPEG_PATH = process.env.FFMPEG_PATH;
-const YTDLP_TIMEOUT_MS = 30_000;
+const YTDLP_TIMEOUT_MS = Number(process.env.YTDLP_TIMEOUT_MS ?? 90_000);
 const MAX_DOWNLOAD_BYTES = 512 * 1024 * 1024;
 const execFileAsync = promisify(execFile);
 
@@ -135,8 +135,20 @@ async function inspectWithYtdlp(url: URL) {
     };
   } catch (error) {
     if (error instanceof ApiFailure) throw error;
+    if (error && typeof error === "object") {
+      const details = error as { stderr?: string; stdout?: string; code?: string | number; killed?: boolean };
+      app.log.error({
+        code: details.code,
+        killed: details.killed,
+        stderr: details.stderr?.slice(-2000),
+        stdout: details.stdout?.slice(-1000),
+      }, "yt-dlp analysis failed");
+    }
     const name = error instanceof Error ? error.name : "";
-    if (name === "AbortError" || name === "TimeoutError") throw new ApiFailure("TIMEOUT", "The media server timed out.", 504);
+    if (name === "AbortError" || name === "TimeoutError" ||
+        (error && typeof error === "object" && "killed" in error && error.killed)) {
+      throw new ApiFailure("TIMEOUT", "YouTube analysis timed out. Please try again.", 504);
+    }
     throw new ApiFailure("FETCH_FAILED", "The public media could not be analyzed.", 422);
   }
 }

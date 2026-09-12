@@ -11,3 +11,5 @@ services:
         value: yt-dlp
       - key: FFMPEG_PATH
         value: /usr/bin
+      - key: YTDLP_TIMEOUT_MS
+        value: "90000"
