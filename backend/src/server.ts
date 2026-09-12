@@ -124,6 +124,7 @@ async function inspectWithYtdlp(url: URL) {
       "--skip-download", "--socket-timeout", String(REQUEST_TIMEOUT_MS / 1000),
     ];
     if (DENO_PATH) ytdlpArgs.push("--js-runtimes", `deno:${DENO_PATH}`, "--remote-components", "ejs:github");
+    ytdlpArgs.push("--extractor-args", "youtube:player_client=web_safari,android");
     ytdlpArgs.push(url.toString());
     const { stdout } = await execFileAsync(YTDLP_PATH, ytdlpArgs, { timeout: YTDLP_TIMEOUT_MS, maxBuffer: 2 * 1024 * 1024, windowsHide: true });
     const metadata = JSON.parse(stdout) as Record<string, unknown>;
@@ -153,7 +154,11 @@ async function inspectWithYtdlp(url: URL) {
         (error && typeof error === "object" && "killed" in error && error.killed)) {
       throw new ApiFailure("TIMEOUT", "YouTube analysis timed out. Please try again.", 504);
     }
-    throw new ApiFailure("FETCH_FAILED", "The public media could not be analyzed.", 422);
+    const diagnostic = error && typeof error === "object" && "stderr" in error &&
+      typeof error.stderr === "string" ? error.stderr.trim().split("\n").slice(-1)[0]?.slice(0, 240) : "";
+    throw new ApiFailure("FETCH_FAILED", diagnostic
+      ? `YouTube analysis failed: ${diagnostic}`
+      : "The public media could not be analyzed.", 422);
   }
 }
 
@@ -203,7 +208,8 @@ app.post<{ Body: { url?: unknown; formatId?: unknown } }>("/v1/download", async 
       "--merge-output-format", "mkv", "--output", path.join(tempDir, "download.%(ext)s"), url.toString(),
     ];
     if (FFMPEG_PATH) ytdlpArgs.unshift("--ffmpeg-location", FFMPEG_PATH);
-    if (DENO_PATH) ytdlpArgs.splice(6, 0, "--js-runtimes", `deno:${DENO_PATH}`, "--remote-components", "ejs:github");
+    if (DENO_PATH) ytdlpArgs.push("--js-runtimes", `deno:${DENO_PATH}`, "--remote-components", "ejs:github");
+    ytdlpArgs.push("--extractor-args", "youtube:player_client=web_safari,android");
     const result = await execFileAsync(YTDLP_PATH, ytdlpArgs, { timeout: YTDLP_TIMEOUT_MS, windowsHide: true, maxBuffer: 2 * 1024 * 1024 });
     const files = (await readdir(tempDir)).filter((file) => file.startsWith("download."));
     if (files.length !== 1) {
