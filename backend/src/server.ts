@@ -123,7 +123,7 @@ async function inspectWithYtdlp(url: URL) {
       "--dump-single-json", "--no-playlist", "--no-cookies", "--no-cache-dir",
       "--skip-download", "--socket-timeout", String(REQUEST_TIMEOUT_MS / 1000),
     ];
-    if (DENO_PATH) ytdlpArgs.push("--js-runtimes", `deno:${DENO_PATH}`);
+    if (DENO_PATH) ytdlpArgs.push("--js-runtimes", `deno:${DENO_PATH}`, "--remote-components", "ejs:github");
     ytdlpArgs.push(url.toString());
     const { stdout } = await execFileAsync(YTDLP_PATH, ytdlpArgs, { timeout: YTDLP_TIMEOUT_MS, maxBuffer: 2 * 1024 * 1024, windowsHide: true });
     const metadata = JSON.parse(stdout) as Record<string, unknown>;
@@ -203,7 +203,7 @@ app.post<{ Body: { url?: unknown; formatId?: unknown } }>("/v1/download", async 
       "--merge-output-format", "mkv", "--output", path.join(tempDir, "download.%(ext)s"), url.toString(),
     ];
     if (FFMPEG_PATH) ytdlpArgs.unshift("--ffmpeg-location", FFMPEG_PATH);
-    if (DENO_PATH) ytdlpArgs.splice(6, 0, "--js-runtimes", `deno:${DENO_PATH}`);
+    if (DENO_PATH) ytdlpArgs.splice(6, 0, "--js-runtimes", `deno:${DENO_PATH}`, "--remote-components", "ejs:github");
     const result = await execFileAsync(YTDLP_PATH, ytdlpArgs, { timeout: YTDLP_TIMEOUT_MS, windowsHide: true, maxBuffer: 2 * 1024 * 1024 });
     const files = (await readdir(tempDir)).filter((file) => file.startsWith("download."));
     if (files.length !== 1) {
