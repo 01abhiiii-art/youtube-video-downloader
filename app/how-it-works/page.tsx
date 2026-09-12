@@ -1,5 +1,7 @@
+import type { Metadata } from "next";
 import { Link as LinkIcon, Search, Download } from "lucide-react";
 import InfoPage from "@/components/InfoPage";
+export const metadata: Metadata = { title: "How the YouTube Downloader Works", description: "Learn how ClipFetch validates a public YouTube URL, analyzes available formats, and prepares an authorized download.", alternates: { canonical: "https://clipfetch.in/how-it-works" } };
 const steps = [
   { icon: LinkIcon, number: "01", title: "Paste YouTube", description: "Start with a public watch, Shorts, embed, or youtu.be URL you’re allowed to use." },
   { icon: Search, number: "02", title: "Analyze", description: "yt-dlp checks the public YouTube video and reports the formats available." },

@@ -8,7 +8,9 @@ export const metadata: Metadata = {
   description: "A privacy-minded YouTube format analyzer and downloader for public videos.",
   keywords: ["YouTube downloader", "YouTube video download", "ClipFetch", "YouTube formats"],
   openGraph: { title: "ClipFetch — YouTube downloads, clearly.", description: "Analyze public YouTube videos and choose an available format.", url: "https://clipfetch.in", siteName: "ClipFetch", type: "website" },
-  robots: { index: true, follow: true }
+  twitter: { card: "summary", title: "ClipFetch — YouTube downloads, clearly.", description: "Analyze public YouTube videos and choose an available format." },
+  alternates: { canonical: "https://clipfetch.in/" },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 } }
 };
 
 const links = [["How it works", "/how-it-works"], ["YouTube formats", "/supported-formats"], ["FAQ", "/faq"], ["About", "/about"]] as const;
