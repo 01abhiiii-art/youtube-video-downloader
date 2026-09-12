@@ -1,0 +1,2 @@
+import type { ReactNode } from "react";
+export default function InfoPage({ title, intro, children }: { title: string; intro: string; children: ReactNode }) { return <section className="mx-auto max-w-4xl px-5 py-16 md:py-24"><p className="text-sm font-bold uppercase tracking-widest text-emerald-700">ClipFetch.in</p><h1 className="mt-4 text-5xl font-black tracking-tight">{title}</h1><p className="mt-5 max-w-2xl text-lg leading-8 text-ink/60">{intro}</p><div className="mt-12">{children}</div></section>; }

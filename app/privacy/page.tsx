@@ -1,0 +1,2 @@
+import InfoPage from "@/components/InfoPage";
+export default function Page() { return <InfoPage title="Privacy" intro="This app does not include analytics, accounts, or frontend link history."><p className="leading-8 text-ink/70">The configured backend receives public YouTube URLs for analysis or download. Document retention, logging, cookies, and subprocessors in your deployment’s privacy notice. Do not send private, authenticated, or sensitive links.</p></InfoPage>; }

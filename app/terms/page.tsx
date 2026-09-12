@@ -1,0 +1,2 @@
+import InfoPage from "@/components/InfoPage";
+export default function Page() { return <InfoPage title="Terms" intro="Use ClipFetch responsibly and only with public YouTube content you’re authorized to access and save."><p className="leading-8 text-ink/70">You are responsible for complying with applicable laws, YouTube’s terms, and rights holders’ requests. Private, authenticated, and DRM-protected videos are not supported.</p></InfoPage>; }

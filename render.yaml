@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: clipfetch-api
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: HOST
+        value: 0.0.0.0
+      - key: YTDLP_PATH
+        value: yt-dlp
+      - key: FFMPEG_PATH
+        value: /usr/bin

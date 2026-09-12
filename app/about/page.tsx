@@ -1,0 +1,2 @@
+import InfoPage from "@/components/InfoPage";
+export default function Page() { return <InfoPage title="Useful, not noisy" intro="ClipFetch is a focused YouTube utility that puts clarity and user control first."><p className="max-w-2xl text-lg leading-8 text-ink/70">ClipFetch accepts public YouTube video URLs only. It uses yt-dlp on the backend to inspect available formats and never pretends that links from other platforms are supported.</p></InfoPage>; }
