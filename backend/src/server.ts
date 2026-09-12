@@ -14,6 +14,7 @@ const HOST = process.env.HOST ?? "127.0.0.1";
 const REQUEST_TIMEOUT_MS = 8_000;
 const YTDLP_PATH = process.env.YTDLP_PATH ?? "yt-dlp";
 const FFMPEG_PATH = process.env.FFMPEG_PATH;
+const DENO_PATH = process.env.DENO_PATH;
 const YTDLP_TIMEOUT_MS = Number(process.env.YTDLP_TIMEOUT_MS ?? 90_000);
 const MAX_DOWNLOAD_BYTES = 512 * 1024 * 1024;
 const execFileAsync = promisify(execFile);
@@ -118,10 +119,13 @@ function formatFromYtdlp(format: Record<string, unknown>) {
 
 async function inspectWithYtdlp(url: URL) {
   try {
-    const { stdout } = await execFileAsync(YTDLP_PATH, [
+    const ytdlpArgs = [
       "--dump-single-json", "--no-playlist", "--no-cookies", "--no-cache-dir",
-      "--skip-download", "--socket-timeout", String(REQUEST_TIMEOUT_MS / 1000), url.toString(),
-    ], { timeout: YTDLP_TIMEOUT_MS, maxBuffer: 2 * 1024 * 1024, windowsHide: true });
+      "--skip-download", "--socket-timeout", String(REQUEST_TIMEOUT_MS / 1000),
+    ];
+    if (DENO_PATH) ytdlpArgs.push("--js-runtimes", `deno:${DENO_PATH}`);
+    ytdlpArgs.push(url.toString());
+    const { stdout } = await execFileAsync(YTDLP_PATH, ytdlpArgs, { timeout: YTDLP_TIMEOUT_MS, maxBuffer: 2 * 1024 * 1024, windowsHide: true });
     const metadata = JSON.parse(stdout) as Record<string, unknown>;
     const formats = Array.isArray(metadata.formats)
       ? metadata.formats.map((format) => formatFromYtdlp(format as Record<string, unknown>)).filter(
@@ -199,6 +203,7 @@ app.post<{ Body: { url?: unknown; formatId?: unknown } }>("/v1/download", async 
       "--merge-output-format", "mkv", "--output", path.join(tempDir, "download.%(ext)s"), url.toString(),
     ];
     if (FFMPEG_PATH) ytdlpArgs.unshift("--ffmpeg-location", FFMPEG_PATH);
+    if (DENO_PATH) ytdlpArgs.splice(6, 0, "--js-runtimes", `deno:${DENO_PATH}`);
     const result = await execFileAsync(YTDLP_PATH, ytdlpArgs, { timeout: YTDLP_TIMEOUT_MS, windowsHide: true, maxBuffer: 2 * 1024 * 1024 });
     const files = (await readdir(tempDir)).filter((file) => file.startsWith("download."));
     if (files.length !== 1) {

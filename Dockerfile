@@ -1,3 +1,4 @@
+FROM denoland/deno:bin AS deno
 FROM node:20-bookworm-slim
 
 ENV PNPM_HOME="/pnpm"
@@ -9,6 +10,8 @@ RUN apt-get update \
   && corepack enable \
   && rm -rf /var/lib/apt/lists/*
 
+COPY --from=deno /deno /usr/local/bin/deno
+
 WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
@@ -19,6 +22,7 @@ RUN pnpm build:api
 ENV HOST=0.0.0.0
 ENV YTDLP_PATH=yt-dlp
 ENV FFMPEG_PATH=/usr/bin
+ENV DENO_PATH=/usr/local/bin/deno
 
 EXPOSE 8787
 CMD ["node", "backend/dist/server.js"]
