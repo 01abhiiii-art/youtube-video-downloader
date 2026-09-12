@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">ClipFetch</title>
+  <desc id="desc">Emerald play button with a download arrow</desc>
+  <rect width="64" height="64" rx="18" fill="#10221f"/>
+  <path d="M16 14.5A5.5 5.5 0 0 1 24.5 10l25 14.5a6.35 6.35 0 0 1 0 11L24.5 50A5.5 5.5 0 0 1 16 45.5z" fill="#bdf6d7"/>
+  <path d="M32 22v17m0 0 7-7m-7 7-7-7" fill="none" stroke="#10221f" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"/>
+</svg>
