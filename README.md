@@ -30,6 +30,9 @@ URL shapes are rejected. `POST /v1/download` accepts
 reported for that video. Use only content you are authorized to save; cookies, credentials,
 private URLs, and DRM bypass are not supported. Existing public-host and private-IP
 protections remain in place before yt-dlp is invoked.
+Some hosting providers may be blocked by YouTube's automated traffic checks. In that
+case the API returns `YOUTUBE_BLOCKED`; ClipFetch does not accept cookies or account
+credentials as a workaround.
 
 Production-style commands:
 

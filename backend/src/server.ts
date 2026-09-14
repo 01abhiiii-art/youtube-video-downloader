@@ -23,6 +23,7 @@ type ErrorCode =
   | "INVALID_REQUEST"
   | "UNSUPPORTED_URL"
   | "PRIVATE_URL"
+  | "YOUTUBE_BLOCKED"
   | "FETCH_FAILED"
   | "TIMEOUT"
   | "RESPONSE_TOO_LARGE"
@@ -117,6 +118,32 @@ function formatFromYtdlp(format: Record<string, unknown>) {
   };
 }
 
+function isYouTubeBotChallenge(stderr: string): boolean {
+  const normalized = stderr.toLowerCase();
+  return normalized.includes("sign in to confirm you're not a bot") ||
+    normalized.includes("sign in to confirm you’re not a bot") ||
+    normalized.includes("use --cookies-from-browser") ||
+    normalized.includes("confirm you are not a bot");
+}
+
+function throwYtdlpFailure(error: unknown, action: "analysis" | "download"): never {
+  const stderr = error && typeof error === "object" && "stderr" in error &&
+    typeof error.stderr === "string" ? error.stderr : "";
+  if (isYouTubeBotChallenge(stderr)) {
+    throw new ApiFailure(
+      "YOUTUBE_BLOCKED",
+      `YouTube is currently blocking ${action} requests from this hosting provider. Try another public video later. ClipFetch does not accept cookies or account credentials.`,
+      422,
+    );
+  }
+  const diagnostic = stderr.trim().split("\n").slice(-1)[0]?.slice(0, 240) ?? "";
+  throw new ApiFailure(
+    "FETCH_FAILED",
+    diagnostic ? `YouTube ${action} failed: ${diagnostic}` : `The public YouTube media could not be ${action === "analysis" ? "analyzed" : "downloaded"}.`,
+    422,
+  );
+}
+
 async function inspectWithYtdlp(url: URL) {
   try {
     const ytdlpArgs = [
@@ -124,7 +151,6 @@ async function inspectWithYtdlp(url: URL) {
       "--skip-download", "--socket-timeout", String(REQUEST_TIMEOUT_MS / 1000),
     ];
     if (DENO_PATH) ytdlpArgs.push("--js-runtimes", `deno:${DENO_PATH}`, "--remote-components", "ejs:github");
-    ytdlpArgs.push("--extractor-args", "youtube:player_client=web_safari,android");
     ytdlpArgs.push(url.toString());
     const { stdout } = await execFileAsync(YTDLP_PATH, ytdlpArgs, { timeout: YTDLP_TIMEOUT_MS, maxBuffer: 2 * 1024 * 1024, windowsHide: true });
     const metadata = JSON.parse(stdout) as Record<string, unknown>;
@@ -154,11 +180,7 @@ async function inspectWithYtdlp(url: URL) {
         (error && typeof error === "object" && "killed" in error && error.killed)) {
       throw new ApiFailure("TIMEOUT", "YouTube analysis timed out. Please try again.", 504);
     }
-    const diagnostic = error && typeof error === "object" && "stderr" in error &&
-      typeof error.stderr === "string" ? error.stderr.trim().split("\n").slice(-1)[0]?.slice(0, 240) : "";
-    throw new ApiFailure("FETCH_FAILED", diagnostic
-      ? `YouTube analysis failed: ${diagnostic}`
-      : "The public media could not be analyzed.", 422);
+    throwYtdlpFailure(error, "analysis");
   }
 }
 
@@ -209,7 +231,6 @@ app.post<{ Body: { url?: unknown; formatId?: unknown } }>("/v1/download", async 
     ];
     if (FFMPEG_PATH) ytdlpArgs.unshift("--ffmpeg-location", FFMPEG_PATH);
     if (DENO_PATH) ytdlpArgs.push("--js-runtimes", `deno:${DENO_PATH}`, "--remote-components", "ejs:github");
-    ytdlpArgs.push("--extractor-args", "youtube:player_client=web_safari,android");
     const result = await execFileAsync(YTDLP_PATH, ytdlpArgs, { timeout: YTDLP_TIMEOUT_MS, windowsHide: true, maxBuffer: 2 * 1024 * 1024 });
     const files = (await readdir(tempDir)).filter((file) => file.startsWith("download."));
     if (files.length !== 1) {
@@ -229,7 +250,7 @@ app.post<{ Body: { url?: unknown; formatId?: unknown } }>("/v1/download", async 
     app.log.error(error);
     const name = error instanceof Error ? error.name : "";
     if (name === "AbortError" || name === "TimeoutError") throw new ApiFailure("TIMEOUT", "The media server timed out.", 504);
-    throw new ApiFailure("FETCH_FAILED", "The public media could not be downloaded.", 422);
+    throwYtdlpFailure(error, "download");
   }
 });
 

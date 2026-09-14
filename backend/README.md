@@ -32,3 +32,6 @@ not on `PATH`. `YTDLP_TIMEOUT_MS` controls the yt-dlp operation timeout and defa
 to 90 seconds. Cookies, credentials, private/authenticated videos,
 direct media URLs, and DRM bypass are not supported. Errors consistently use
 `{ "error": { "code": "...", "message": "..." } }`.
+If YouTube blocks the API host with a sign-in/bot challenge, the API returns
+`YOUTUBE_BLOCKED` with a safe user-facing explanation; the server does not accept or
+request browser cookies or account credentials.
