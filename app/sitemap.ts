@@ -1,2 +1,7 @@
 import type { MetadataRoute } from "next";
-export default function sitemap(): MetadataRoute.Sitemap { return ["", "/how-it-works", "/supported-formats", "/faq", "/about", "/contact", "/privacy", "/terms"].map(path => ({ url: `https://clipfetch.in${path}`, lastModified: new Date() })); }
+const SITE_URL = "https://clipfetch.in";
+const paths = ["/", "/how-it-works/", "/supported-formats/", "/faq/", "/about/", "/contact/", "/privacy/", "/terms/"];
+
+export default function sitemap(): MetadataRoute.Sitemap {
+  return paths.map((path) => ({ url: `${SITE_URL}${path}` }));
+}
