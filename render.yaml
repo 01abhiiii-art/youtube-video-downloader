@@ -15,3 +15,16 @@ services:
         value: /usr/local/bin/deno
       - key: YTDLP_TIMEOUT_MS
         value: "90000"
+  - type: web
+    name: clipfetch
+    runtime: node
+    plan: free
+    buildCommand: pnpm install --frozen-lockfile && pnpm build
+    startCommand: pnpm start
+    healthCheckPath: /
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          type: web
+          name: clipfetch-api
+          property: url

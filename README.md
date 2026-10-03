@@ -51,11 +51,9 @@ Run `pnpm typecheck`, `pnpm typecheck:api`, `pnpm lint`, `pnpm build`, and `pnpm
 
 ## Deployment
 
-Deploy the frontend to Vercel from the repository root with the framework set to
-Next.js. Set `NEXT_PUBLIC_API_URL` to the public Render URL for the API, for example
-`https://clipfetch-api.onrender.com`.
-
-The backend includes a `Dockerfile` and `render.yaml` for Render. Create a Render
-Web Service from the repository using the Docker runtime; the image installs both
-`yt-dlp` and `ffmpeg`, binds to Render's `PORT`, and exposes `GET /health`. The
-frontend must not use the local `.env.local` value in production.
+Deploy both services to Render with the root `render.yaml` Blueprint. Connect the
+GitHub repository in Render and create a new Blueprint instance; Render builds the
+API with the Dockerfile and deploys the Next.js frontend as a Node web service. The
+Blueprint wires `NEXT_PUBLIC_API_URL` to the API service URL automatically. The API
+image installs `yt-dlp` and `ffmpeg`, binds to Render's `PORT`, and exposes
+`GET /health`. Do not use the local `.env.local` value in production.

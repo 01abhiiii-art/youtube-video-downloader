@@ -41,24 +41,35 @@ const YOUTUBE_HOSTS = new Set([
   "youtube.com", "www.youtube.com", "m.youtube.com",
   "youtu.be", "www.youtu.be", "m.youtu.be",
 ]);
+const ALLOWED_WATCH_QUERY_KEYS = new Set([
+  "v", "t", "start", "feature", "si", "app", "pp", "ab_channel", "cbrd",
+]);
 
 function isPrivateAddress(address: string): boolean {
   if (net.isIPv4(address)) {
     const [a, b] = address.split(".").map(Number);
-    return a === 10 || a === 127 || a === 0 || (a === 169 && b === 254) ||
-      (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168);
+    return a === 10 || a === 127 || a === 0 ||
+      (a === 100 && b >= 64 && b <= 127) ||
+      (a === 169 && b === 254) ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) ||
+      (a === 198 && (b === 18 || b === 19 || b === 51));
   }
   if (net.isIPv6(address)) {
     const normalized = address.toLowerCase();
     return normalized === "::1" || normalized === "::" || normalized.startsWith("fc") ||
-      normalized.startsWith("fd") || normalized.startsWith("fe80:");
+      normalized.startsWith("fd") || normalized.startsWith("fe80:") ||
+      normalized.startsWith("::ffff:127.") || normalized.startsWith("::ffff:10.") ||
+      normalized.startsWith("::ffff:172.") || normalized.startsWith("::ffff:192.168.") ||
+      normalized.startsWith("::ffff:100.64.");
   }
   return true;
 }
 
 async function assertPublicUrl(raw: string): Promise<URL> {
+  const trimmed = raw.trim();
   let parsed: URL;
-  try { parsed = new URL(raw); } catch { throw new ApiFailure("UNSUPPORTED_URL", "Only a valid public http(s) URL is supported."); }
+  try { parsed = new URL(trimmed); } catch { throw new ApiFailure("UNSUPPORTED_URL", "Only a valid public http(s) URL is supported."); }
   if (!["http:", "https:"].includes(parsed.protocol) || parsed.username || parsed.password ||
       parsed.hostname === "localhost" || parsed.hostname.endsWith(".localhost") ||
       parsed.hostname.endsWith(".local")) {
@@ -85,18 +96,30 @@ async function assertYouTubeUrl(raw: string): Promise<URL> {
     throw new ApiFailure("UNSUPPORTED_URL", "Only public YouTube video URLs are supported.");
   }
 
-  const segments = parsed.pathname.split("/").filter(Boolean);
+  const path = parsed.pathname.replace(/\/+$/, "") || "/";
+  const segments = path.split("/").filter(Boolean);
   let videoId: string | null = null;
+
   if (hostname.endsWith("youtu.be")) {
-    if (segments.length === 1) videoId = segments[0];
-  } else if (segments.length === 1 && segments[0] === "watch") {
+    if (segments.length !== 1) {
+      throw new ApiFailure("UNSUPPORTED_URL", "Use a public YouTube watch, Shorts, embed, or youtu.be URL.");
+    }
+    videoId = segments[0];
+    if (["list", "index", "playlist"].some((key) => parsed.searchParams.has(key))) {
+      throw new ApiFailure("UNSUPPORTED_URL", "Only public YouTube video URLs are supported; playlists are not accepted.");
+    }
+  } else if (path === "/watch") {
     videoId = parsed.searchParams.get("v");
-    if ([...parsed.searchParams.keys()].some((key) => key !== "v" && key !== "t" && key !== "start")) {
-      throw new ApiFailure("UNSUPPORTED_URL", "Only standard YouTube watch URLs are supported.");
+    const unsupportedKeys = [...parsed.searchParams.keys()].filter(
+      (key) => !ALLOWED_WATCH_QUERY_KEYS.has(key) || key === "list" || key === "index" || key === "playlist",
+    );
+    if (unsupportedKeys.length) {
+      throw new ApiFailure("UNSUPPORTED_URL", "Only standard video watch parameters are supported.");
     }
   } else if (segments.length === 2 && (segments[0] === "shorts" || segments[0] === "embed")) {
     videoId = segments[1];
   }
+
   if (!videoId || !YOUTUBE_VIDEO_ID.test(videoId)) {
     throw new ApiFailure("UNSUPPORTED_URL", "Use a public YouTube watch, Shorts, embed, or youtu.be URL.");
   }
