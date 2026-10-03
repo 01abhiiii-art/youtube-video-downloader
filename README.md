@@ -54,6 +54,8 @@ Run `pnpm typecheck`, `pnpm typecheck:api`, `pnpm lint`, `pnpm build`, and `pnpm
 Deploy both services to Render with the root `render.yaml` Blueprint. Connect the
 GitHub repository in Render and create a new Blueprint instance; Render builds the
 API with the Dockerfile and deploys the Next.js frontend as a Node web service. The
-Blueprint wires `NEXT_PUBLIC_API_URL` to the API service URL automatically. The API
-image installs `yt-dlp` and `ffmpeg`, binds to Render's `PORT`, and exposes
-`GET /health`. Do not use the local `.env.local` value in production.
+Blueprint sets the frontend API path to `/api` and wires the API's private
+host-and-port into a Next.js rewrite. The browser talks only to the frontend origin;
+the frontend proxies API calls privately to the API service. The API image installs
+`yt-dlp` and `ffmpeg`, binds to Render's `PORT`, and exposes `GET /health`. Do not
+use the local `.env.local` value in production.

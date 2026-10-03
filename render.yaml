@@ -24,7 +24,9 @@ services:
     healthCheckPath: /
     envVars:
       - key: NEXT_PUBLIC_API_URL
+        value: /api
+      - key: API_INTERNAL_HOSTPORT
         fromService:
           type: web
           name: clipfetch-api
-          property: url
+          property: hostport
